@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "checkboxes": [
+    {
+      "id": "sentTogether",
+      "label": "Instruction + Undertaking sent together",
+      "icon": "link"
+    },
+    {
+      "id": "telephonic",
+      "label": "Telephonically discussed",
+      "icon": "phone",
+      "insertText": "As telephonically discussed,"
+    },
+    {
+      "id": "docsAttached",
+      "label": "Supporting documents attached",
+      "icon": "paperclip",
+      "insertText": "Supporting documents are attached for your reference."
+    }
+  ],
+  "groups": [
+    {
+      "id": "att",
+      "label": "For Attorney",
+      "sharedSubject": "NEW INSTRUCTION: PROVIDING OF LEGAL REPRESENTATION TO <RANK> <INIT_SURNAME> - <MATTER_TYPE>, <LOCATION> <COURT_TYPE> (<DATE>)",
+      "templates": [
+        {
+          "id": "att-first-contact",
+          "label": "First Contact",
+          "subject": { "shared": true },
+          "body": "Good day, I trust all is well\n\n{{TELEPHONIC_LINE}}\n\nKindly find attached an instruction for your perusal and reply\n\n{{DOCS_LINE}}\n\nThe matter details:\n- **Type:** <MATTER_TYPE>\n- **For:** <RANK_SHORT> <INIT_SURNAME>\n- **Location:** <LOCATION>\n- **Date:** <DATE>\n\nWe trust to hear back from you as soon as is convenient\nThank you kindly for your consideration"
+        },
+        {
+          "id": "att-other-accepted",
+          "label": "Other Attorney Already Accepted",
+          "static": true,
+          "subject": { "shared": true },
+          "body": "Good day, I trust all is well,\n\nThank you kindly for your response on the matter,\n\nUnfortunately, another attorney has gotten back to us sooner, and has already accepted the instruction\n\nWe do appreciate your willingness to accept and assist with our matter\n\nThank you kindly once again and have a wonderful day"
+        },
+        {
+          "id": "att-undertaking",
+          "label": "Undertaking",
+          "subject": { "shared": true },
+          "body": "Good day, I trust all is well\n\n{{TELEPHONIC_LINE}}\n\nThank you for the acceptance of the matter.\n\nKindly find attached the Attorneys Undertaking for your signature and return.\n\n{{DOCS_LINE}}\n\nThe members contact details, should you require them are:\n- **Member:** <RANK_SHORT> <INIT_SURNAME>\n- **Contact:** <MEMBER_CONTACT>\n\nWe thank you once again for your acceptance of this matter, it is greatly appreciated.",
+          "variants": {
+            "sentTogether": {
+              "label": "Undertaking + Instruction",
+              "body": "Good day, I trust all is well,\n\n{{TELEPHONIC_LINE}}\n\nKindly find attached the Instruction and Attorneys Undertaking for your signature and return.\n\n{{DOCS_LINE}}\n\nThe member's contact details are as follows:\n- **Member:** <RANK_SHORT> <INIT_SURNAME>\n- **Contact:** <MEMBER_CONTACT>\n\nThank you again"
+            }
+          }
+        },
+        {
+          "id": "att-appointment",
+          "label": "Appointment of Attorney",
+          "subject": { "shared": true },
+          "body": "Good day, I trust all is well\n\n{{TELEPHONIC_LINE}}\n\nWe thank you for the signed undertaking, it is greatly appreciated.\n\nKindly find attached the formal appointment letter\n\n{{DOCS_LINE}}\n\nThe members details, should you require them are:\n- **Member:** <RANK_SHORT> <INIT_SURNAME>\n- **Contact:** <MEMBER_CONTACT>"
+        }
+      ]
+    },
+    {
+      "id": "member",
+      "label": "For Member",
+      "templates": [
+        {
+          "id": "member-notification",
+          "label": "Notification Letter",
+          "subject": { "static": "YOUR APPLICATION FOR LEGAL REPRESENTATION" },
+          "body": "Good day <RANK> <INIT_SURNAME>\n\nKindly find attached a letter for your attention\n\n{{DOCS_LINE}}"
+        }
+      ]
+    }
+  ]
+}

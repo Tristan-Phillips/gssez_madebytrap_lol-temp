@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "variables": [
+    {
+      "key": "RANK",
+      "label": "Rank",
+      "description": "Military rank of the member",
+      "type": "dropdown",
+      "placeholder": "Rank",
+      "hasShort": true,
+      "options": [
+        { "label": "General", "short": "Gen" },
+        { "label": "Admiral", "short": "Adm" },
+        { "label": "Lieutenant General", "short": "Lt Gen" },
+        { "label": "Vice Admiral", "short": "V Adm" },
+        { "label": "Major General", "short": "Maj Gen" },
+        { "label": "Rear Admiral", "short": "R Adm" },
+        { "label": "Brigadier General", "short": "Brig Gen" },
+        { "label": "Rear Admiral (Junior Grade)", "short": "R Adm (JG)" },
+        { "label": "Colonel", "short": "Col" },
+        { "label": "Commander", "short": "Cdr" },
+        { "label": "Lieutenant Colonel", "short": "Lt Col" },
+        { "label": "Lieutenant Commander", "short": "Lt Cdr" },
+        { "label": "Major", "short": "Maj" },
+        { "label": "Captain", "short": "Capt" },
+        { "label": "Lieutenant", "short": "Lt" },
+        { "label": "Sub Lieutenant", "short": "S Lt" },
+        { "label": "Second Lieutenant", "short": "2Lt" },
+        { "label": "Ensign", "short": "Ens" },
+        { "label": "Master Chief Warrant Officer", "short": "MCWO" },
+        { "label": "Senior Chief Warrant Officer", "short": "SCWO" },
+        { "label": "Chief Warrant Officer", "short": "CWO" },
+        { "label": "Master Warrant Officer", "short": "MWO" },
+        { "label": "Senior Warrant Officer", "short": "SWO" },
+        { "label": "Warrant Officer Class 1", "short": "WO1" },
+        { "label": "Warrant Officer Class 2", "short": "WO2" },
+        { "label": "Staff Sergeant", "short": "SSgt" },
+        { "label": "Flight Sergeant", "short": "FSgt" },
+        { "label": "Chief Petty Officer", "short": "CPO" },
+        { "label": "Sergeant", "short": "Sgt" },
+        { "label": "Petty Officer", "short": "PO" },
+        { "label": "Corporal", "short": "Cpl" },
+        { "label": "Leading Seaman", "short": "LS" },
+        { "label": "Lance Corporal", "short": "LCpl" },
+        { "label": "Able Seaman", "short": "Ab" },
+        { "label": "Private", "short": "Pte" },
+        { "label": "Aircraftman", "short": "Cmn" },
+        { "label": "Seaman", "short": "Sea" },
+        { "label": "Gunner", "short": "Gnr" },
+        { "label": "Rifleman", "short": "Rfn" },
+        { "label": "Trooper", "short": "Tpr" },
+        { "label": "Sapper", "short": "Spr" },
+        { "label": "Signalman", "short": "Sig" },
+        { "label": "Other", "short": "Other", "custom": true, "maxLength": 64 }
+      ]
+    },
+    {
+      "key": "INIT_SURNAME",
+      "label": "Initials and Surname",
+      "description": "Member's initials and surname",
+      "type": "text",
+      "placeholder": "Initials and Surname",
+      "maxLength": 64
+    },
+    {
+      "key": "MATTER_TYPE",
+      "label": "Matter Type",
+      "description": "Type of matter",
+      "type": "dropdown",
+      "placeholder": "Matter Type",
+      "hasShort": true,
+      "options": [
+        { "label": "Maintenance", "short": "MAIN" },
+        { "label": "Military", "short": "MIL" },
+        { "label": "Criminal", "short": "CRIM" },
+        { "label": "Protection Order", "short": "PO" },
+        { "label": "Bail Application", "short": "BAIL" }
+      ]
+    },
+    {
+      "key": "LOCATION",
+      "label": "Location",
+      "description": "Where the matter takes place",
+      "type": "text",
+      "placeholder": "Location",
+      "maxLength": 256
+    },
+    {
+      "key": "COURT_TYPE",
+      "label": "Court Type",
+      "description": "The type of court",
+      "type": "dropdown",
+      "placeholder": "Court Type",
+      "hasShort": false,
+      "options": [
+        { "label": "Magistrate's" },
+        { "label": "Legsato" },
+        { "label": "Regional" },
+        { "label": "Other", "custom": true, "maxLength": 256 }
+      ]
+    },
+    {
+      "key": "DATE",
+      "label": "Court Date",
+      "description": "The date the matter takes place",
+      "type": "date",
+      "placeholder": "Court Date"
+    },
+    {
+      "key": "MEMBER_CONTACT",
+      "label": "Member Contact",
+      "description": "Contact number (or email) for the member",
+      "type": "text",
+      "placeholder": "Member Contact",
+      "maxLength": 64
+    }
+  ]
+}

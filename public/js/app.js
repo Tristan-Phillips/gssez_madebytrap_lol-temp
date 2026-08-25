@@ -1,0 +1,219 @@
+import { loadData } from './data.js';
+import { getSettings, upsertHistoryEntry } from './storage.js';
+import { createFieldControl } from './field.js';
+import { buildGrid } from './cards.js';
+import { createHistoryPanel } from './historyPanel.js';
+import { createSettingsPanel } from './settingsPanel.js';
+import { icon } from './icons.js';
+
+function buildSignature(inputs, checkboxState) {
+  const norm = {};
+  for (const [k, v] of Object.entries(inputs)) {
+    if (v && typeof v === 'object' && 'label' in v) norm[k] = v.label;
+    else if (v && typeof v === 'object' && 'raw' in v) norm[k] = v.raw;
+    else norm[k] = v;
+  }
+  return JSON.stringify({ inputs: norm, checkboxState });
+}
+
+function buildHistoryLabel(inputs) {
+  const parts = [];
+  if (inputs.RANK?.short && inputs.INIT_SURNAME) parts.push(`${inputs.RANK.short} ${inputs.INIT_SURNAME}`);
+  else if (inputs.INIT_SURNAME) parts.push(inputs.INIT_SURNAME);
+  if (inputs.MATTER_TYPE?.label) parts.push(inputs.MATTER_TYPE.label);
+  if (inputs.DATE?.formatted) parts.push(inputs.DATE.formatted);
+  return parts.length ? parts.join(' — ') : 'Untitled case';
+}
+
+function buildContext(inputs) {
+  const ctx = {};
+  for (const [key, val] of Object.entries(inputs)) {
+    if (val == null) continue;
+    if (key === 'DATE') {
+      if (val.valid) ctx.DATE = val.formatted;
+      continue;
+    }
+    if (typeof val === 'object' && 'label' in val) {
+      if (val.label) ctx[key] = val;
+      continue;
+    }
+    if (typeof val === 'string' && val.trim()) ctx[key] = val;
+  }
+  return ctx;
+}
+
+async function main() {
+  const app = {
+    inputs: {},
+    checkboxState: { sentTogether: false, telephonic: false, docsAttached: false },
+    overrides: {},
+    cards: [],
+    data: null,
+    getSettings,
+    buildCardContext(templateId) {
+      const merged = { ...this.inputs };
+      const ov = this.overrides[templateId];
+      if (ov) {
+        for (const [k, v] of Object.entries(ov)) {
+          if (v !== undefined && v !== null && v !== '') merged[k] = v;
+        }
+      }
+      return buildContext(merged);
+    },
+    onCopySuccess() {
+      const signature = buildSignature(app.inputs, app.checkboxState);
+      upsertHistoryEntry({
+        id: signature,
+        signature,
+        label: buildHistoryLabel(app.inputs),
+        savedAt: new Date().toISOString(),
+        inputs: app.inputs,
+        checkboxState: { ...app.checkboxState }
+      });
+      historyPanel.render();
+    },
+    loadHistoryEntry(entry) {
+      app.inputs = JSON.parse(JSON.stringify(entry.inputs));
+      app.checkboxState = { ...entry.checkboxState };
+      app.overrides = {};
+      renderInputBar();
+      syncCheckboxUI();
+      rebuildGrid();
+    },
+    async reloadData() {
+      app.data = await loadData();
+      rebuildGrid();
+    }
+  };
+
+  app.data = await loadData();
+
+  const root = document.getElementById('app');
+
+  const topbar = document.createElement('header');
+  topbar.id = 'topbar';
+
+  const inputBar = document.createElement('div');
+  inputBar.id = 'input-bar';
+
+  const checkboxRow = document.createElement('div');
+  checkboxRow.id = 'checkbox-row';
+
+  const actions = document.createElement('div');
+  actions.id = 'topbar-actions';
+  const historyBtn = document.createElement('button');
+  historyBtn.type = 'button';
+  historyBtn.className = 'icon-btn icon-btn-large';
+  historyBtn.setAttribute('aria-label', 'Open history');
+  historyBtn.title = 'History';
+  historyBtn.innerHTML = icon('history');
+  const settingsBtn = document.createElement('button');
+  settingsBtn.type = 'button';
+  settingsBtn.className = 'icon-btn icon-btn-large';
+  settingsBtn.setAttribute('aria-label', 'Open settings');
+  settingsBtn.title = 'Settings';
+  settingsBtn.innerHTML = icon('settings');
+  actions.append(historyBtn, settingsBtn);
+
+  const topRow = document.createElement('div');
+  topRow.id = 'topbar-row';
+  topRow.append(inputBar, actions);
+
+  topbar.append(topRow, checkboxRow);
+
+  const gridContainer = document.createElement('main');
+  gridContainer.id = 'grid-container';
+
+  root.append(topbar, gridContainer);
+
+  const historyPanel = createHistoryPanel(app, closeAllPanels);
+  const settingsPanel = createSettingsPanel(app, closeAllPanels);
+  const backdrop = document.createElement('div');
+  backdrop.className = 'panel-backdrop';
+  backdrop.hidden = true;
+  root.append(backdrop, historyPanel.el, settingsPanel.el);
+
+  function openPanel(panel) {
+    historyPanel.close();
+    settingsPanel.close();
+    panel.open();
+    backdrop.hidden = false;
+  }
+  function closeAllPanels() {
+    historyPanel.close();
+    settingsPanel.close();
+    backdrop.hidden = true;
+  }
+  historyBtn.addEventListener('click', () => openPanel(historyPanel));
+  settingsBtn.addEventListener('click', () => openPanel(settingsPanel));
+  backdrop.addEventListener('click', closeAllPanels);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllPanels();
+  });
+
+  const checkboxEls = {};
+  function buildCheckboxRow() {
+    checkboxRow.innerHTML = '';
+    for (const def of app.data.checkboxes) {
+      const label = document.createElement('label');
+      label.className = 'checkbox-pill';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = app.checkboxState[def.id] || false;
+      input.addEventListener('change', () => {
+        app.checkboxState[def.id] = input.checked;
+        updateAllCards();
+      });
+      const iconWrap = document.createElement('span');
+      iconWrap.innerHTML = icon(def.icon || 'link');
+      const textSpan = document.createElement('span');
+      textSpan.textContent = def.label;
+      label.append(input, iconWrap, textSpan);
+      checkboxRow.appendChild(label);
+      checkboxEls[def.id] = input;
+    }
+  }
+  function syncCheckboxUI() {
+    for (const [id, elInput] of Object.entries(checkboxEls)) {
+      elInput.checked = app.checkboxState[id] || false;
+    }
+  }
+
+  function renderInputBar() {
+    inputBar.innerHTML = '';
+    for (const def of app.data.variables) {
+      const control = createFieldControl(def, app.inputs[def.key] || null, {
+        idSuffix: 'main',
+        onChange: (value) => {
+          app.inputs[def.key] = value;
+          updateAllCards();
+        }
+      });
+      inputBar.appendChild(control);
+    }
+  }
+
+  function updateAllCards() {
+    for (const card of app.cards) card.update();
+  }
+
+  function rebuildGrid() {
+    app.cards = buildGrid(gridContainer, app.data, app);
+  }
+
+  function applyStickySetting() {
+    topbar.classList.toggle('topbar-sticky', getSettings().stickyTopbar);
+  }
+  app.applyStickySetting = applyStickySetting;
+
+  buildCheckboxRow();
+  renderInputBar();
+  rebuildGrid();
+  applyStickySetting();
+}
+
+main().catch((err) => {
+  console.error('EZcopy failed to start', err);
+  document.getElementById('app').innerHTML =
+    '<p class="fatal-error">EZcopy could not load. Check the console for details, and make sure the site is served over http(s) rather than opened as a local file.</p>';
+});
