@@ -4,7 +4,7 @@ import { icon } from './icons.js';
 
 let uid = 0;
 
-export function createFieldControl(def, initialValue, { idSuffix, onChange, compact } = {}) {
+export function createFieldControl(def, initialValue, { idSuffix, onChange, compact, initialTrialMode } = {}) {
   const wrap = document.createElement('div');
   wrap.className = 'field' + (compact ? ' field-compact' : '');
   wrap.dataset.key = def.key;
@@ -18,15 +18,16 @@ export function createFieldControl(def, initialValue, { idSuffix, onChange, comp
   label.htmlFor = fieldId;
   wrap.appendChild(label);
 
+  let api = {};
   if (def.type === 'dropdown') {
     buildDropdown(wrap, fieldId, def, initialValue, onChange);
   } else if (def.type === 'date') {
-    buildDate(wrap, fieldId, def, initialValue, onChange);
+    api = buildDate(wrap, fieldId, def, initialValue, onChange, !!initialTrialMode);
   } else {
     buildText(wrap, fieldId, def, initialValue, onChange);
   }
 
-  return wrap;
+  return { el: wrap, setTrialMode: api.setTrialMode || (() => {}) };
 }
 
 function buildText(wrap, fieldId, def, initialValue, onChange) {
@@ -334,14 +335,13 @@ function renderRecentChips(container, fieldKey, onPick) {
   }
 }
 
-function buildDate(wrap, fieldId, def, initialValue, onChange) {
+function createDateRow(placeholderText, onResult) {
   const row = document.createElement('div');
   row.className = 'field-date-row';
 
   const input = document.createElement('input');
   input.type = 'text';
-  input.id = fieldId;
-  input.placeholder = def.placeholder ? `${def.placeholder} (e.g. 2208)` : 'e.g. 2208';
+  input.placeholder = placeholderText;
   row.appendChild(input);
 
   const pickerBtn = document.createElement('button');
@@ -361,26 +361,24 @@ function buildDate(wrap, fieldId, def, initialValue, onChange) {
   const hint = document.createElement('div');
   hint.className = 'field-hint';
 
-  wrap.appendChild(row);
-  wrap.appendChild(hint);
+  let currentResult = null;
 
-  function setFromResult(result) {
+  function apply(result) {
+    currentResult = result;
     if (result.valid) {
       hint.textContent = result.formatted;
       hint.classList.remove('field-hint-error');
-      onChange(result);
     } else if (input.value.trim()) {
       hint.textContent = 'Unrecognized date';
       hint.classList.add('field-hint-error');
-      onChange({ raw: input.value, formatted: '', valid: false });
     } else {
       hint.textContent = '';
       hint.classList.remove('field-hint-error');
-      onChange(null);
     }
+    onResult();
   }
 
-  input.addEventListener('input', () => setFromResult(parseDate(input.value)));
+  input.addEventListener('input', () => apply(parseDate(input.value)));
   pickerBtn.addEventListener('click', () => {
     if (native.showPicker) native.showPicker();
     else native.click();
@@ -388,11 +386,86 @@ function buildDate(wrap, fieldId, def, initialValue, onChange) {
   native.addEventListener('change', () => {
     const result = formatIso(native.value);
     input.value = result.formatted;
-    setFromResult(result);
+    apply(result);
   });
 
-  if (initialValue && initialValue.raw) {
-    input.value = initialValue.raw;
-    setFromResult(initialValue);
+  function setInitial(result) {
+    if (result && result.raw) {
+      input.value = result.raw;
+      apply(result);
+    }
   }
+
+  return { row, hint, input, setInitial, getResult: () => currentResult };
+}
+
+function buildDate(wrap, fieldId, def, initialValue, onChange, startInTrialMode) {
+  let trialMode = false;
+
+  function emit() {
+    const from = fromRow.getResult();
+    const till = tillRow.getResult();
+    if (trialMode && from?.valid && till?.valid) {
+      onChange({
+        raw: `${from.raw} - ${till.raw}`,
+        formatted: `${from.formatted} TILL ${till.formatted}`,
+        valid: true,
+        isRange: true,
+        from,
+        till
+      });
+      return;
+    }
+    onChange(from);
+  }
+
+  const fromRow = createDateRow(def.placeholder ? `${def.placeholder} (e.g. 2208)` : 'e.g. 2208', emit);
+  fromRow.input.id = fieldId;
+
+  const tillRow = createDateRow('Till date (e.g. 0210)', emit);
+
+  const fromLabel = document.createElement('div');
+  fromLabel.className = 'field-date-sublabel';
+  fromLabel.textContent = 'From';
+  fromLabel.hidden = true;
+
+  const tillWrap = document.createElement('div');
+  tillWrap.className = 'field-date-till';
+  tillWrap.hidden = true;
+  const tillLabel = document.createElement('div');
+  tillLabel.className = 'field-date-sublabel';
+  tillLabel.textContent = 'Till';
+  tillWrap.append(tillLabel, tillRow.row, tillRow.hint);
+
+  wrap.appendChild(fromLabel);
+  wrap.appendChild(fromRow.row);
+  wrap.appendChild(fromRow.hint);
+  wrap.appendChild(tillWrap);
+
+  function setTrialMode(isTrial) {
+    trialMode = isTrial;
+    fromLabel.hidden = !isTrial;
+    tillWrap.hidden = !isTrial;
+    emit();
+  }
+
+  if (startInTrialMode) {
+    trialMode = true;
+    fromLabel.hidden = false;
+    tillWrap.hidden = false;
+  }
+
+  if (initialValue) {
+    if (initialValue.isRange) {
+      trialMode = true;
+      fromLabel.hidden = false;
+      tillWrap.hidden = false;
+      fromRow.setInitial(initialValue.from);
+      tillRow.setInitial(initialValue.till);
+    } else if (initialValue.raw) {
+      fromRow.setInitial(initialValue);
+    }
+  }
+
+  return { setTrialMode };
 }

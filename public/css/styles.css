@@ -299,6 +299,20 @@ button:focus-visible {
   color: var(--danger);
 }
 
+.field-date-sublabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.field-date-till {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
 /* Icon buttons */
 
 .icon-btn {
@@ -396,12 +410,47 @@ button:focus-visible {
 
 .card-override-panel {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
   background: var(--surface-muted);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 10px;
+}
+
+.override-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.override-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.override-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.override-field-reset {
+  padding: 3px;
+}
+
+.override-field-reset .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.override-field-textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .card-block {

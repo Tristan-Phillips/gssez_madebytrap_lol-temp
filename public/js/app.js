@@ -30,7 +30,10 @@ function buildContext(inputs) {
   for (const [key, val] of Object.entries(inputs)) {
     if (val == null) continue;
     if (key === 'DATE') {
-      if (val.valid) ctx.DATE = val.formatted;
+      if (val.valid) {
+        ctx.DATE = val.formatted;
+        ctx.__isTrialDateRange = !!val.isRange;
+      }
       continue;
     }
     if (typeof val === 'object' && 'label' in val) {
@@ -45,20 +48,13 @@ function buildContext(inputs) {
 async function main() {
   const app = {
     inputs: {},
-    checkboxState: { sentTogether: false, telephonic: false, docsAttached: false },
+    checkboxState: { sentTogether: false, telephonic: false, docsAttached: false, isTrial: false },
     overrides: {},
     cards: [],
     data: null,
     getSettings,
-    buildCardContext(templateId) {
-      const merged = { ...this.inputs };
-      const ov = this.overrides[templateId];
-      if (ov) {
-        for (const [k, v] of Object.entries(ov)) {
-          if (v !== undefined && v !== null && v !== '') merged[k] = v;
-        }
-      }
-      return buildContext(merged);
+    getContext() {
+      return buildContext(this.inputs);
     },
     onCopySuccess() {
       const signature = buildSignature(app.inputs, app.checkboxState);
@@ -151,6 +147,8 @@ async function main() {
     if (e.key === 'Escape') closeAllPanels();
   });
 
+  let dateControl = null;
+
   const checkboxEls = {};
   function buildCheckboxRow() {
     checkboxRow.innerHTML = '';
@@ -162,6 +160,9 @@ async function main() {
       input.checked = app.checkboxState[def.id] || false;
       input.addEventListener('change', () => {
         app.checkboxState[def.id] = input.checked;
+        if (def.id === 'isTrial' && dateControl) {
+          dateControl.setTrialMode(input.checked);
+        }
         updateAllCards();
       });
       const iconWrap = document.createElement('span');
@@ -184,12 +185,14 @@ async function main() {
     for (const def of app.data.variables) {
       const control = createFieldControl(def, app.inputs[def.key] || null, {
         idSuffix: 'main',
+        initialTrialMode: def.key === 'DATE' ? !!app.checkboxState.isTrial : undefined,
         onChange: (value) => {
           app.inputs[def.key] = value;
           updateAllCards();
         }
       });
-      inputBar.appendChild(control);
+      if (def.key === 'DATE') dateControl = control;
+      inputBar.appendChild(control.el);
     }
   }
 

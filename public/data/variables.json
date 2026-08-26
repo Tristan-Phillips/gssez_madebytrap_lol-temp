@@ -93,9 +93,9 @@
       "placeholder": "Court Type",
       "hasShort": false,
       "options": [
-        { "label": "Magistrate's" },
+        { "label": "Magistrate's Court" },
         { "label": "Legsato" },
-        { "label": "Regional" },
+        { "label": "Regional Court" },
         { "label": "Other", "custom": true, "maxLength": 256 }
       ]
     },

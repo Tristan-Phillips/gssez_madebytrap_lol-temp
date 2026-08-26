@@ -1,5 +1,4 @@
-import { renderText, requiredKeysFor } from './render.js';
-import { createFieldControl } from './field.js';
+import { renderText, formatMarkup } from './render.js';
 import { copyRich, copyPlain } from './clipboard.js';
 import { icon } from './icons.js';
 
@@ -27,7 +26,34 @@ async function handleCopy(btn, getPlain, getHtml, useRaw, onSuccess) {
   }, 1400);
 }
 
-export function createCard(def, group, variablesByKey, app) {
+function buildOverrideField(label, rows, onEdit, onReset) {
+  const field = document.createElement('div');
+  field.className = 'override-field';
+
+  const head = document.createElement('div');
+  head.className = 'override-field-head';
+  head.appendChild(Object.assign(document.createElement('span'), { className: 'override-field-label', textContent: label }));
+  const resetBtn = document.createElement('button');
+  resetBtn.type = 'button';
+  resetBtn.className = 'icon-btn override-field-reset';
+  resetBtn.setAttribute('aria-label', `Reset ${label.toLowerCase()} to default`);
+  resetBtn.title = `Reset ${label.toLowerCase()} to default`;
+  resetBtn.innerHTML = icon('reset');
+  head.appendChild(resetBtn);
+  field.appendChild(head);
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'override-field-textarea';
+  textarea.rows = rows;
+  field.appendChild(textarea);
+
+  textarea.addEventListener('input', () => onEdit(textarea.value));
+  resetBtn.addEventListener('click', () => onReset());
+
+  return { el: field, textarea };
+}
+
+export function createCard(def, group, app) {
   const el = document.createElement('article');
   el.className = 'card';
   el.dataset.templateId = def.id;
@@ -38,54 +64,82 @@ export function createCard(def, group, variablesByKey, app) {
   title.className = 'card-title';
   header.appendChild(title);
 
-  const requiredKeys = [
-    ...requiredKeysFor(def.body),
-    ...requiredKeysFor(def.variants?.sentTogether?.body || ''),
-    ...requiredKeysFor(def.subject.static || activeSubject(def, app.data.sharedSubjects, group.id))
-  ];
-  const uniqueKeys = [...new Set(requiredKeys)].filter((k) => variablesByKey[k]);
-
-  let overrideToggle = null;
-  let overridePanel = null;
-  if (uniqueKeys.length) {
-    overrideToggle = document.createElement('button');
-    overrideToggle.type = 'button';
-    overrideToggle.className = 'icon-btn card-override-toggle';
-    overrideToggle.setAttribute('aria-label', 'Override values for this card');
-    overrideToggle.title = 'Override values for this card';
-    overrideToggle.innerHTML = icon('pencil');
-    header.appendChild(overrideToggle);
-  }
+  const overrideToggle = document.createElement('button');
+  overrideToggle.type = 'button';
+  overrideToggle.className = 'icon-btn card-override-toggle';
+  overrideToggle.setAttribute('aria-label', 'Edit this card\'s text');
+  overrideToggle.title = 'Edit this card\'s text';
+  overrideToggle.innerHTML = icon('pencil');
+  overrideToggle.setAttribute('aria-expanded', 'false');
+  header.appendChild(overrideToggle);
   el.appendChild(header);
 
-  if (uniqueKeys.length) {
-    overridePanel = document.createElement('div');
-    overridePanel.className = 'card-override-panel';
-    overridePanel.hidden = true;
-    for (const key of uniqueKeys) {
-      const varDef = variablesByKey[key];
-      const control = createFieldControl(varDef, app.overrides[def.id]?.[key] || null, {
-        idSuffix: `ov-${def.id}`,
-        compact: true,
-        onChange: (value) => {
-          app.overrides[def.id] = app.overrides[def.id] || {};
-          if (value === null || value === '' || (value && value.pending)) {
-            delete app.overrides[def.id][key];
-          } else {
-            app.overrides[def.id][key] = value;
-          }
-          overrideToggle.classList.toggle('has-override', Object.keys(app.overrides[def.id]).length > 0);
-          update();
-        }
-      });
-      overridePanel.appendChild(control);
+  const overridePanel = document.createElement('div');
+  overridePanel.className = 'card-override-panel';
+  overridePanel.hidden = true;
+
+  const subjectField = buildOverrideField(
+    'Subject',
+    2,
+    (text) => {
+      app.overrides[def.id] = app.overrides[def.id] || {};
+      app.overrides[def.id].subject = text;
+      overrideToggle.classList.add('has-override');
+      update();
+    },
+    () => {
+      if (app.overrides[def.id]) delete app.overrides[def.id].subject;
+      subjectField.textarea.value = currentRaw().subject;
+      overrideToggle.classList.toggle('has-override', hasActiveOverride());
+      update();
     }
-    el.appendChild(overridePanel);
-    overrideToggle.addEventListener('click', () => {
-      overridePanel.hidden = !overridePanel.hidden;
-      overrideToggle.setAttribute('aria-expanded', String(!overridePanel.hidden));
-    });
+  );
+  const bodyField = buildOverrideField(
+    'Body',
+    10,
+    (text) => {
+      app.overrides[def.id] = app.overrides[def.id] || {};
+      app.overrides[def.id].body = text;
+      overrideToggle.classList.add('has-override');
+      update();
+    },
+    () => {
+      if (app.overrides[def.id]) delete app.overrides[def.id].body;
+      bodyField.textarea.value = currentRaw().body;
+      overrideToggle.classList.toggle('has-override', hasActiveOverride());
+      update();
+    }
+  );
+  overridePanel.append(subjectField.el, bodyField.el);
+  el.appendChild(overridePanel);
+
+  function hasActiveOverride() {
+    const ov = app.overrides[def.id];
+    return !!(ov && (ov.subject !== undefined || ov.body !== undefined));
   }
+  overrideToggle.classList.toggle('has-override', hasActiveOverride());
+
+  function currentRaw() {
+    const ctx = app.getContext();
+    const subjectRaw = activeSubject(def, app.data.sharedSubjects, group.id);
+    const body = activeBody(def, app.checkboxState);
+    return {
+      subject: renderText(subjectRaw, ctx, app.checkboxState, app.data.checkboxes, { uppercase: true }).raw,
+      body: renderText(body.text, ctx, app.checkboxState, app.data.checkboxes).raw
+    };
+  }
+
+  overrideToggle.addEventListener('click', () => {
+    const opening = overridePanel.hidden;
+    overridePanel.hidden = !overridePanel.hidden;
+    overrideToggle.setAttribute('aria-expanded', String(!overridePanel.hidden));
+    if (opening) {
+      const fresh = currentRaw();
+      const ov = app.overrides[def.id];
+      subjectField.textarea.value = ov?.subject !== undefined ? ov.subject : fresh.subject;
+      bodyField.textarea.value = ov?.body !== undefined ? ov.body : fresh.body;
+    }
+  });
 
   const subjectBlock = document.createElement('div');
   subjectBlock.className = 'card-block';
@@ -125,30 +179,47 @@ export function createCard(def, group, variablesByKey, app) {
   });
 
   function update() {
-    const ctx = app.buildCardContext(def.id);
-    const subjectRaw = activeSubject(def, app.data.sharedSubjects, group.id);
     const body = activeBody(def, app.checkboxState);
-
     title.textContent = body.label;
 
-    const subjectResult = renderText(subjectRaw, ctx, app.checkboxState, app.data.checkboxes, { uppercase: true });
-    const bodyResult = renderText(body.text, ctx, app.checkboxState, app.data.checkboxes);
+    const ov = app.overrides[def.id];
 
-    subjectText.innerHTML = subjectResult.html;
-    bodyText.innerHTML = bodyResult.html;
+    if (ov?.subject !== undefined) {
+      const formatted = formatMarkup(ov.subject);
+      subjectText.innerHTML = formatted.html;
+      live.subjectPlain = formatted.plain;
+      live.subjectHtml = formatted.html;
+      subjectCopy.disabled = !ov.subject.trim();
+      subjectCopy.title = subjectCopy.disabled ? 'Nothing to copy' : 'Copy subject line';
+    } else {
+      const ctx = app.getContext();
+      const subjectRaw = activeSubject(def, app.data.sharedSubjects, group.id);
+      const subjectResult = renderText(subjectRaw, ctx, app.checkboxState, app.data.checkboxes, { uppercase: true });
+      subjectText.innerHTML = subjectResult.html;
+      live.subjectPlain = subjectResult.plain;
+      live.subjectHtml = subjectResult.html;
+      subjectCopy.disabled = subjectResult.missing.size > 0;
+      subjectCopy.title = subjectCopy.disabled
+        ? `Fill in: ${[...subjectResult.missing].join(', ')}`
+        : 'Copy subject line';
+    }
 
-    live.subjectPlain = subjectResult.plain;
-    live.subjectHtml = subjectResult.html;
-    live.bodyPlain = bodyResult.plain;
-    live.bodyHtml = bodyResult.html;
-
-    subjectCopy.disabled = subjectResult.missing.size > 0;
-    subjectCopy.title = subjectCopy.disabled
-      ? `Fill in: ${[...subjectResult.missing].join(', ')}`
-      : 'Copy subject line';
-
-    bodyCopy.disabled = bodyResult.missing.size > 0;
-    bodyCopy.title = bodyCopy.disabled ? `Fill in: ${[...bodyResult.missing].join(', ')}` : 'Copy email body';
+    if (ov?.body !== undefined) {
+      const formatted = formatMarkup(ov.body);
+      bodyText.innerHTML = formatted.html;
+      live.bodyPlain = formatted.plain;
+      live.bodyHtml = formatted.html;
+      bodyCopy.disabled = !ov.body.trim();
+      bodyCopy.title = bodyCopy.disabled ? 'Nothing to copy' : 'Copy email body';
+    } else {
+      const ctx = app.getContext();
+      const bodyResult = renderText(body.text, ctx, app.checkboxState, app.data.checkboxes);
+      bodyText.innerHTML = bodyResult.html;
+      live.bodyPlain = bodyResult.plain;
+      live.bodyHtml = bodyResult.html;
+      bodyCopy.disabled = bodyResult.missing.size > 0;
+      bodyCopy.title = bodyCopy.disabled ? `Fill in: ${[...bodyResult.missing].join(', ')}` : 'Copy email body';
+    }
   }
 
   update();
@@ -157,7 +228,6 @@ export function createCard(def, group, variablesByKey, app) {
 
 export function buildGrid(container, data, app) {
   container.innerHTML = '';
-  const variablesByKey = Object.fromEntries(data.variables.map((v) => [v.key, v]));
   const cards = [];
 
   for (const group of data.groups) {
@@ -172,7 +242,7 @@ export function buildGrid(container, data, app) {
     grid.className = 'card-grid';
 
     for (const def of group.templates) {
-      const card = createCard(def, group, variablesByKey, app);
+      const card = createCard(def, group, app);
       cards.push(card);
       grid.appendChild(card.el);
     }
