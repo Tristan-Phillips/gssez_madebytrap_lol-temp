@@ -1,27 +1,31 @@
 {
-  "version": 1,
+  "version": 2,
   "checkboxes": [
     {
       "id": "sentTogether",
       "label": "Instruction + Undertaking sent together",
-      "icon": "link"
+      "icon": "link",
+      "description": "Combines the Undertaking and Instruction into one email instead of sending them separately."
     },
     {
       "id": "telephonic",
       "label": "Telephonically discussed",
       "icon": "phone",
-      "insertText": "*As telephonically discussed,*"
+      "insertText": "*As telephonically discussed,*",
+      "description": "Adds a line noting this was discussed by phone before the email was sent."
     },
     {
       "id": "docsAttached",
       "label": "Supporting documents attached",
       "icon": "paperclip",
-      "insertText": "*Supporting documents are attached for your reference.*"
+      "insertText": "*Supporting documents are attached for your reference.*",
+      "description": "Adds a line referencing the supporting documents attached to this email."
     },
     {
       "id": "isTrial",
       "label": "Trial matter (date range)",
-      "icon": "calendar"
+      "icon": "calendar",
+      "description": "Switches the Date field to a From/Till range for a trial spanning multiple days."
     }
   ],
   "groups": [

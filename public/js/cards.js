@@ -1,6 +1,9 @@
 import { renderText, formatMarkup } from './render.js';
 import { copyRich, copyPlain } from './clipboard.js';
 import { icon } from './icons.js';
+import { buildWordContext, buildWordDocFilename, generateWordDoc, downloadBlob, wordDocMissingFields } from './wordDoc.js';
+
+const WORD_DOC_CARD_ID = 'att-first-contact';
 
 function activeBody(def, checkboxState) {
   if (checkboxState.sentTogether && def.variants && def.variants.sentTogether) {
@@ -14,10 +17,34 @@ function activeSubject(def, sharedSubjects, groupId) {
   return def.subject.static || '';
 }
 
-async function handleCopy(btn, getPlain, getHtml, useRaw, onSuccess) {
+async function handleDocxDownload(btn, app) {
+  const matterShort = app.inputs.MATTER_TYPE?.short;
+  const wordContext = buildWordContext(app.inputs, app.getSettings());
+  btn.disabled = true;
+  try {
+    const blob = await generateWordDoc(matterShort, wordContext, app.data.matters);
+    downloadBlob(blob, buildWordDocFilename(wordContext));
+    app.announce?.('Word letter downloaded');
+    btn.classList.add('copied');
+    btn.innerHTML = icon('check');
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = icon('download');
+    }, 1400);
+  } catch (err) {
+    console.error('EZcopy: Word letter generation failed', err);
+    alert('Could not generate the Word letter. Check the console for details.');
+    btn.innerHTML = icon('download');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function handleCopy(btn, getPlain, getHtml, useRaw, onSuccess, announceMsg, announce) {
   const ok = useRaw ? await copyPlain(getPlain()) : await copyRich(getHtml(), getPlain());
   if (!ok) return;
   onSuccess?.();
+  announce?.(announceMsg);
   btn.classList.add('copied');
   btn.innerHTML = icon('check');
   setTimeout(() => {
@@ -71,6 +98,9 @@ export function createCard(def, group, app) {
   overrideToggle.title = 'Edit this card\'s text';
   overrideToggle.innerHTML = icon('pencil');
   overrideToggle.setAttribute('aria-expanded', 'false');
+
+  const isWordDocCard = def.id === WORD_DOC_CARD_ID;
+
   header.appendChild(overrideToggle);
   el.appendChild(header);
 
@@ -167,15 +197,36 @@ export function createCard(def, group, app) {
   bodyBlock.append(bodyText, bodyCopy);
   el.appendChild(bodyBlock);
 
+  let docxBtn = null;
+  if (isWordDocCard) {
+    const docxBlock = document.createElement('div');
+    docxBlock.className = 'card-block card-docx-block';
+    const docxLabel = document.createElement('span');
+    docxLabel.className = 'card-text card-docx-label';
+    docxLabel.innerHTML = icon('file', 'card-docx-icon') + '<span>Word letter (with fee offer)</span>';
+    docxBtn = document.createElement('button');
+    docxBtn.type = 'button';
+    docxBtn.className = 'icon-btn card-copy';
+    docxBtn.setAttribute('aria-label', 'Download Word letter');
+    docxBtn.title = 'Download Word letter';
+    docxBtn.innerHTML = icon('download');
+    docxBtn.addEventListener('click', () => {
+      if (docxBtn.disabled) return;
+      handleDocxDownload(docxBtn, app);
+    });
+    docxBlock.append(docxLabel, docxBtn);
+    el.appendChild(docxBlock);
+  }
+
   const live = { subjectPlain: '', subjectHtml: '', bodyPlain: '', bodyHtml: '' };
 
   subjectCopy.addEventListener('click', () => {
     if (subjectCopy.disabled) return;
-    handleCopy(subjectCopy, () => live.subjectPlain, () => live.subjectPlain, true, app.onCopySuccess);
+    handleCopy(subjectCopy, () => live.subjectPlain, () => live.subjectPlain, true, app.onCopySuccess, 'Subject line copied to clipboard', app.announce);
   });
   bodyCopy.addEventListener('click', () => {
     if (bodyCopy.disabled) return;
-    handleCopy(bodyCopy, () => live.bodyPlain, () => live.bodyHtml, app.getSettings().copyRaw, app.onCopySuccess);
+    handleCopy(bodyCopy, () => live.bodyPlain, () => live.bodyHtml, app.getSettings().copyRaw, app.onCopySuccess, 'Email body copied to clipboard', app.announce);
   });
 
   function update() {
@@ -219,6 +270,12 @@ export function createCard(def, group, app) {
       live.bodyHtml = bodyResult.html;
       bodyCopy.disabled = bodyResult.missing.size > 0;
       bodyCopy.title = bodyCopy.disabled ? `Fill in: ${[...bodyResult.missing].join(', ')}` : 'Copy email body';
+    }
+
+    if (docxBtn) {
+      const missing = wordDocMissingFields(app.inputs);
+      docxBtn.disabled = missing.length > 0;
+      docxBtn.title = docxBtn.disabled ? `Fill in: ${missing.join(', ')}` : 'Download Word letter';
     }
   }
 

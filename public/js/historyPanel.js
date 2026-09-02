@@ -67,6 +67,7 @@ export function createHistoryPanel(app, requestClose) {
       del.innerHTML = icon('trash');
       del.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (!confirm(`Delete "${entry.label}" from history? This cannot be undone.`)) return;
         deleteHistoryEntry(entry.id);
         render();
       });

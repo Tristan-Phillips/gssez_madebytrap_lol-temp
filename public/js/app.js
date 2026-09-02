@@ -1,10 +1,11 @@
 import { loadData } from './data.js';
-import { getSettings, upsertHistoryEntry } from './storage.js';
+import { getSettings, upsertHistoryEntry, isStorageAvailable } from './storage.js';
 import { createFieldControl } from './field.js';
 import { buildGrid } from './cards.js';
 import { createHistoryPanel } from './historyPanel.js';
 import { createSettingsPanel } from './settingsPanel.js';
 import { icon } from './icons.js';
+import { buildRandomInputs, buildRandomCheckboxState } from './randomTestData.js';
 
 function buildSignature(inputs, checkboxState) {
   const norm = {};
@@ -41,6 +42,11 @@ function buildContext(inputs) {
       continue;
     }
     if (typeof val === 'string' && val.trim()) ctx[key] = val;
+  }
+  if (ctx.MATTER_FILE_CODE && ctx.MATTER_TYPE) {
+    const yy = String(new Date().getFullYear()).slice(-2);
+    const prefix = ctx.MATTER_TYPE.short || ctx.MATTER_TYPE.label;
+    ctx.MATTER_FILE_CODE = `${prefix} ${ctx.MATTER_FILE_CODE}/${yy}`;
   }
   return ctx;
 }
@@ -79,12 +85,38 @@ async function main() {
     async reloadData() {
       app.data = await loadData();
       rebuildGrid();
+    },
+    randomizeInputs() {
+      app.inputs = buildRandomInputs(app.data.variables);
+      app.checkboxState = buildRandomCheckboxState(app.data.checkboxes);
+      app.overrides = {};
+      renderInputBar();
+      syncCheckboxUI();
+      rebuildGrid();
+    },
+    announce(message) {
+      liveRegion.textContent = '';
+      requestAnimationFrame(() => {
+        liveRegion.textContent = message;
+      });
     }
   };
 
   app.data = await loadData();
 
   const root = document.getElementById('app');
+
+  const liveRegion = document.createElement('div');
+  liveRegion.className = 'visually-hidden';
+  liveRegion.setAttribute('role', 'status');
+  liveRegion.setAttribute('aria-live', 'polite');
+  root.appendChild(liveRegion);
+
+  const storageBanner = document.createElement('div');
+  storageBanner.className = 'notice notice-warning app-storage-banner';
+  storageBanner.innerHTML = icon('warning') + '<span>Your browser storage is unavailable or full — history and settings will not be saved this session.</span>';
+  storageBanner.hidden = isStorageAvailable();
+  root.appendChild(storageBanner);
 
   const topbar = document.createElement('header');
   topbar.id = 'topbar';
@@ -155,6 +187,7 @@ async function main() {
     for (const def of app.data.checkboxes) {
       const label = document.createElement('label');
       label.className = 'checkbox-pill';
+      label.title = def.description || '';
       const input = document.createElement('input');
       input.type = 'checkbox';
       input.checked = app.checkboxState[def.id] || false;

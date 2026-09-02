@@ -13,18 +13,24 @@ async function fetchJson(path) {
  * currently shipped data version (see context/decisions.md, "Data & non-functional").
  */
 export async function loadData() {
-  const [variablesData, templatesData] = await Promise.all([
+  const [variablesData, templatesData, mattersData] = await Promise.all([
     fetchJson('public/data/variables.json'),
-    fetchJson('public/data/templates.json')
+    fetchJson('public/data/templates.json'),
+    fetchJson('public/data/matters.json')
   ]);
 
   const settings = getSettings();
+  const dv = settings.dataVersions;
+  // Loose null checks (not ===) so upgrading users whose stored dataVersions
+  // predates the "matters" field (undefined, not null) aren't permanently
+  // flagged stale for a version they never had a chance to acknowledge.
   const stale =
-    (settings.dataVersions.variables !== null && settings.dataVersions.variables !== variablesData.version) ||
-    (settings.dataVersions.templates !== null && settings.dataVersions.templates !== templatesData.version);
+    (dv.variables != null && dv.variables !== variablesData.version) ||
+    (dv.templates != null && dv.templates !== templatesData.version) ||
+    (dv.matters != null && dv.matters !== mattersData.version);
 
-  if (settings.dataVersions.variables === null || settings.dataVersions.templates === null) {
-    updateSettings({ dataVersions: { variables: variablesData.version, templates: templatesData.version } });
+  if (dv.variables == null || dv.templates == null || dv.matters == null) {
+    updateSettings({ dataVersions: { variables: variablesData.version, templates: templatesData.version, matters: mattersData.version } });
   }
 
   const groups = templatesData.groups.map((group) => ({
@@ -52,8 +58,9 @@ export async function loadData() {
     sharedSubjects,
     defaults: { groups: templatesData.groups },
     groups,
+    matters: mattersData.matters,
     stale,
-    versions: { variables: variablesData.version, templates: templatesData.version }
+    versions: { variables: variablesData.version, templates: templatesData.version, matters: mattersData.version }
   };
 }
 
@@ -66,6 +73,6 @@ function applyOverride(tpl, override) {
   };
 }
 
-export function acknowledgeStaleData(variablesVersion, templatesVersion) {
-  updateSettings({ dataVersions: { variables: variablesVersion, templates: templatesVersion } });
+export function acknowledgeStaleData(variablesVersion, templatesVersion, mattersVersion) {
+  updateSettings({ dataVersions: { variables: variablesVersion, templates: templatesVersion, matters: mattersVersion } });
 }

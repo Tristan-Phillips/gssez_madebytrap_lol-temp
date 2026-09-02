@@ -40,7 +40,9 @@ export function createSettingsPanel(app, requestClose) {
     body.innerHTML = '';
     body.appendChild(buildStaleNotice());
     body.appendChild(buildGeneralSection());
+    body.appendChild(buildTestingSection());
     body.appendChild(buildVariablesReferenceSection());
+    body.appendChild(buildMatterFeesSection());
     body.appendChild(buildTemplatesSection());
     body.appendChild(buildNewTemplateSection());
   }
@@ -56,7 +58,7 @@ export function createSettingsPanel(app, requestClose) {
     dismiss.className = 'btn btn-small';
     dismiss.textContent = 'Dismiss';
     dismiss.addEventListener('click', () => {
-      acknowledgeStaleData(app.data.versions.variables, app.data.versions.templates);
+      acknowledgeStaleData(app.data.versions.variables, app.data.versions.templates, app.data.versions.matters);
       app.data.stale = false;
       render();
     });
@@ -91,6 +93,19 @@ export function createSettingsPanel(app, requestClose) {
     stickyLabel.append(stickyCheckbox, el('span', null, 'Keep the input bar pinned while scrolling'));
     section.appendChild(stickyLabel);
 
+    const initialsField = el('div', 'settings-field');
+    initialsField.appendChild(el('label', null, 'Your initials (remembered, used as the drafter reference on generated documents)'));
+    const initialsInput = document.createElement('input');
+    initialsInput.type = 'text';
+    initialsInput.placeholder = 'e.g. JvR';
+    initialsInput.maxLength = 16;
+    initialsInput.value = settings.creatorInitials;
+    initialsInput.addEventListener('input', () => {
+      updateSettings({ creatorInitials: initialsInput.value });
+    });
+    initialsField.appendChild(initialsInput);
+    section.appendChild(initialsField);
+
     const ioRow = el('div', 'settings-io-row');
     const exportBtn = el('button', 'btn');
     exportBtn.type = 'button';
@@ -109,6 +124,22 @@ export function createSettingsPanel(app, requestClose) {
 
     ioRow.append(exportBtn, importBtn, fileInput);
     section.appendChild(ioRow);
+    return section;
+  }
+
+  function buildTestingSection() {
+    const section = el('section', 'settings-section');
+    section.appendChild(el('h3', null, 'Testing'));
+    section.appendChild(
+      el('p', 'settings-hint', "Fills every field with random sample data so you don't have to type values while testing. Not for real cases.")
+    );
+
+    const btn = el('button', 'btn');
+    btn.type = 'button';
+    btn.innerHTML = icon('shuffle') + '<span>Randomize all values</span>';
+    btn.addEventListener('click', () => app.randomizeInputs());
+    section.appendChild(btn);
+
     return section;
   }
 
@@ -161,6 +192,37 @@ export function createSettingsPanel(app, requestClose) {
     return section;
   }
 
+  function buildFeeList(title, fees) {
+    const wrap = el('div', 'fees-group');
+    wrap.appendChild(el('h4', 'code-ref-subheading', title));
+    const list = el('div', 'code-ref-list');
+    for (const fee of fees || []) {
+      const row = el('div', 'code-ref-row');
+      row.append(el('span', 'fees-label', fee.label), el('span', 'fees-amount', fee.amount));
+      list.appendChild(row);
+    }
+    wrap.appendChild(list);
+    return wrap;
+  }
+
+  function buildMatterFeesSection() {
+    const section = el('section', 'settings-section');
+    section.appendChild(el('h3', null, 'Matter fees'));
+    section.appendChild(el('p', 'settings-hint', 'Reference only — these amounts are baked into the generated Word letter\'s text and are not editable here.'));
+
+    for (const matter of Object.values(app.data.matters || {})) {
+      const details = el('details', 'template-row');
+      const summary = document.createElement('summary');
+      summary.textContent = matter.label;
+      details.appendChild(summary);
+      details.appendChild(buildFeeList('VAT registered', matter.fees?.vatRegistered));
+      details.appendChild(buildFeeList('Not VAT registered', matter.fees?.notVatRegistered));
+      section.appendChild(details);
+    }
+
+    return section;
+  }
+
   function doExport() {
     const data = exportAll();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -176,6 +238,7 @@ export function createSettingsPanel(app, requestClose) {
 
   async function doImport(file) {
     if (!file) return;
+    if (!confirm('Import this file? It will replace your current settings, history, and template customizations. This cannot be undone.')) return;
     try {
       const text = await file.text();
       const data = JSON.parse(text);
@@ -278,6 +341,7 @@ export function createSettingsPanel(app, requestClose) {
       resetBtn.className = 'btn btn-small';
       resetBtn.innerHTML = icon('reset') + '<span>Reset to default</span>';
       resetBtn.addEventListener('click', async () => {
+        if (!confirm(`Reset "${title}" to its default text? Your customization will be lost.`)) return;
         onReset();
         await app.reloadData();
         render();

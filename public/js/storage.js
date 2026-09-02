@@ -5,10 +5,22 @@ const KEYS = {
   optionOrder: 'ezcopy.optionOrder'
 };
 
+export function isStorageAvailable() {
+  try {
+    const testKey = '__ezcopy_storage_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const DEFAULT_SETTINGS = {
   copyRaw: false,
   stickyTopbar: false,
-  dataVersions: { variables: null, templates: null },
+  creatorInitials: '',
+  dataVersions: { variables: null, templates: null, matters: null },
   templateOverrides: {}, // { [templateId]: { subject?, body? } }
   sharedSubjectOverrides: {}, // { [groupId]: subjectText }
   customGroups: [] // [{ id, label, templates: [{ id, label, subject, body }] }]

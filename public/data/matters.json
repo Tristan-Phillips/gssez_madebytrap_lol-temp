@@ -1,0 +1,101 @@
+{
+  "version": 2,
+  "matters": {
+    "BAIL": {
+      "label": "Bail Application",
+      "docxTemplate": "public/data/doc/BAIL/BAIL_TEMPLATE.docx",
+      "fees": {
+        "vatRegistered": [
+          { "label": "Opposed application", "amount": "R1546-75" },
+          { "label": "Unopposed application", "amount": "R1244-30" },
+          { "label": "Postponements (maximum 2)", "amount": "R325-45" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ],
+        "notVatRegistered": [
+          { "label": "Opposed application", "amount": "R1345-00" },
+          { "label": "Unopposed application", "amount": "R1082-00" },
+          { "label": "Postponements (maximum 2)", "amount": "R283-00" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ]
+      }
+    },
+    "MAIN": {
+      "label": "Maintenance Matter",
+      "docxTemplate": "public/data/doc/MAIN/MAIN_TEMPLATE.docx",
+      "fees": {
+        "vatRegistered": [
+          { "label": "Matter withdrawn / settled", "amount": "R1194-85" },
+          { "label": "Matter opposed and argued", "amount": "R1749-15" },
+          { "label": "Postponements (maximum 2)", "amount": "R325-45" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ],
+        "notVatRegistered": [
+          { "label": "Matter withdrawn / settled", "amount": "R1039-00" },
+          { "label": "Matter opposed and argued", "amount": "R1521-00" },
+          { "label": "Postponements (maximum 2)", "amount": "R283-00" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ]
+      }
+    },
+    "MIL": {
+      "label": "Military Matter",
+      "docxTemplate": "public/data/doc/MIL/MIL_TEMPLATE.docx",
+      "fees": {
+        "vatRegistered": [
+          { "label": "All charges withdrawn", "amount": "R841-80" },
+          { "label": "Guilty plea on all charges", "amount": "R1194-85" },
+          { "label": "Not guilty plea and trial (irrespective of duration)", "amount": "R1799-75" },
+          { "label": "Postponements (maximum 2)", "amount": "R325-45" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ],
+        "notVatRegistered": [
+          { "label": "All charges withdrawn", "amount": "R732-00" },
+          { "label": "Guilty plea on all charges", "amount": "R1039-00" },
+          { "label": "Not guilty plea and trial (irrespective of duration)", "amount": "R1565-00" },
+          { "label": "Postponements (maximum 2)", "amount": "R283-00" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ]
+      }
+    },
+    "CRIM": {
+      "label": "Criminal Matter",
+      "docxTemplate": "public/data/doc/CRIM/CRIM_TEMPLATE.docx",
+      "fees": {
+        "vatRegistered": [
+          { "label": "All charges withdrawn", "amount": "R1194-85" },
+          { "label": "Guilty plea on all charges", "amount": "R1515-70" },
+          { "label": "Not guilty plea and trial (1st day)", "amount": "R2052-75" },
+          { "label": "Subsequent days (maximum 2)", "amount": "R588-80" },
+          { "label": "Postponements (maximum 2)", "amount": "R325-45" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ],
+        "notVatRegistered": [
+          { "label": "All charges withdrawn", "amount": "R1039-00" },
+          { "label": "Guilty plea on all charges", "amount": "R1318-00" },
+          { "label": "Not guilty plea and trial (1st day)", "amount": "R1785-00" },
+          { "label": "Subsequent days (maximum 2)", "amount": "R512-00" },
+          { "label": "Postponements (maximum 2)", "amount": "R283-00" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ]
+      }
+    },
+    "PO": {
+      "label": "Protection Order",
+      "docxTemplate": "public/data/doc/PO/PO_TEMPLATE.docx",
+      "fees": {
+        "vatRegistered": [
+          { "label": "Matter withdrawn or settled", "amount": "R1194-85" },
+          { "label": "Matter opposed and argued", "amount": "R1749-15" },
+          { "label": "Postponements (maximum 2)", "amount": "R325-45" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ],
+        "notVatRegistered": [
+          { "label": "Matter withdrawn or settled", "amount": "R1039-00" },
+          { "label": "Matter opposed and argued", "amount": "R1521-00" },
+          { "label": "Postponements (maximum 2)", "amount": "R283-00" },
+          { "label": "Travelling fees (max R1500.00)", "amount": "R3-50/km" }
+        ]
+      }
+    }
+  }
+}

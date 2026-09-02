@@ -15,7 +15,9 @@ const ICONS = {
   paperclip: '<path d="M8 12l6.5-6.5a3 3 0 1 1 4.2 4.2L11 17.4a5 5 0 1 1-7-7L12 2.4"/>',
   chevron: '<path d="M6 9l6 6 6-6"/>',
   pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
-  warning: '<path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L2.6 18a1 1 0 0 0 .9 1.5h17a1 1 0 0 0 .9-1.5L13.7 3.9a1 1 0 0 0-1.7 0z"/>'
+  warning: '<path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L2.6 18a1 1 0 0 0 .9 1.5h17a1 1 0 0 0 .9-1.5L13.7 3.9a1 1 0 0 0-1.7 0z"/>',
+  shuffle: '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'
 };
 
 export function icon(name, cls) {

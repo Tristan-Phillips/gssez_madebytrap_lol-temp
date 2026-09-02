@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 5,
   "variables": [
     {
       "key": "RANK",
@@ -113,6 +113,46 @@
       "type": "text",
       "placeholder": "Member Contact",
       "maxLength": 64
+    },
+    {
+      "key": "ATT_NAME",
+      "label": "Attorney Firm",
+      "description": "Name of the recipient attorney firm, for generated documents",
+      "type": "text",
+      "placeholder": "Attorney Firm",
+      "maxLength": 256
+    },
+    {
+      "key": "MATTER_FILE_CODE",
+      "label": "File Number",
+      "description": "Sequential file number for this matter — automatically prefixed with the matter type and current year (e.g. CRIM 216/26)",
+      "type": "text",
+      "placeholder": "e.g. 216",
+      "maxLength": 8
+    },
+    {
+      "key": "MATTER_SPECIFIC",
+      "label": "Matter Detail",
+      "description": "Short parenthetical detail on the specific nature of the matter, for generated documents (e.g. \"Domestic Violence\" for a CRIM matter). Optional — leave blank if not applicable.",
+      "type": "text",
+      "placeholder": "e.g. Domestic Violence",
+      "maxLength": 128
+    },
+    {
+      "key": "MATTER_PARTY_ROLE",
+      "label": "Member's Role in Matter",
+      "description": "The member's role in the matter, for generated documents (e.g. \"Respondent\", \"Applicant\"). Optional — used only where the letter states the member's role.",
+      "type": "text",
+      "placeholder": "e.g. Respondent",
+      "maxLength": 64
+    },
+    {
+      "key": "MATTER_COURT_NAME",
+      "label": "Court/Tribunal Name",
+      "description": "The specific court or tribunal name, for generated documents (e.g. \"Military Court\"). Varies by matter — not a fixed dropdown.",
+      "type": "text",
+      "placeholder": "e.g. Military Court",
+      "maxLength": 128
     }
   ]
 }

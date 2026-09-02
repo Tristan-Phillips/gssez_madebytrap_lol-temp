@@ -150,6 +150,11 @@ button:focus-visible {
   margin: 0;
 }
 
+.checkbox-pill:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Fields */
 
 .field {
@@ -242,10 +247,14 @@ button:focus-visible {
   font-size: 13px;
 }
 
-.combo-option:hover,
+.combo-option:hover {
+  background: #eaf1ff;
+}
+
 .combo-option:focus {
   background: #eaf1ff;
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .field-custom {
@@ -489,6 +498,25 @@ button:focus-visible {
   margin: 0;
 }
 
+.card-docx-block {
+  background: var(--surface);
+  border-style: dashed;
+}
+
+.card-docx-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.card-docx-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 /* Side panels */
 
 .panel-backdrop {
@@ -599,6 +627,18 @@ button:focus-visible {
   cursor: pointer;
 }
 
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.settings-field label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .settings-io-row {
   display: flex;
   gap: 8px;
@@ -661,6 +701,23 @@ button:focus-visible {
   background: #eaf1ff;
 }
 
+.fees-group + .fees-group {
+  margin-top: 12px;
+}
+
+.fees-label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.fees-amount {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .code-chip.copied {
   color: var(--success);
   border-color: var(--success);
@@ -711,6 +768,10 @@ button:focus-visible {
 
 .notice span {
   flex: 1;
+}
+
+.app-storage-banner {
+  margin: 12px 20px 0;
 }
 
 .template-row {
