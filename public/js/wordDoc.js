@@ -8,7 +8,7 @@ const MONTHS_TITLE = [
 // but as an explicit list since introspecting a .docx's placeholders
 // client-side (vs. the plain-text email templates) isn't practical.
 export const WORD_DOC_REQUIRED_KEYS = [
-  'MATTER_TYPE', 'RANK', 'INIT_SURNAME', 'LOCATION', 'COURT_TYPE', 'DATE', 'ATT_NAME', 'MATTER_FILE_CODE'
+  'MATTER_TYPE', 'RANK', 'INIT_SURNAME', 'LOCATION', 'COURT_TYPE', 'DATE', 'ATT_NAME', 'MATTER_FILE_CODE', 'MATTER_FILE_YEAR'
 ];
 
 function formatDateTitleCase(iso) {
@@ -119,8 +119,8 @@ export function buildWordContext(inputs, settings) {
   ctx.MATTER_COURT_NAME = inputs.MATTER_COURT_NAME || '';
 
   const rawFileNum = (inputs.MATTER_FILE_CODE || '').trim();
-  const yy = String(today.getFullYear()).slice(-2);
-  ctx.MATTER_FILE_CODE = rawFileNum ? `${rawFileNum}/${yy}` : '';
+  const fileYear = (inputs.MATTER_FILE_YEAR || '').trim();
+  ctx.MATTER_FILE_CODE = (rawFileNum && fileYear) ? `${rawFileNum}/${fileYear}` : '';
 
   const dateVal = inputs.DATE;
   if (dateVal?.isRange) {

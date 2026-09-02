@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "variables": [
     {
       "key": "RANK",
@@ -125,10 +125,18 @@
     {
       "key": "MATTER_FILE_CODE",
       "label": "File Number",
-      "description": "Sequential file number for this matter — automatically prefixed with the matter type and current year (e.g. CRIM 216/26)",
+      "description": "Sequential file number for this matter — automatically prefixed with the matter type and combined with the File Year field (e.g. CRIM 216/26)",
       "type": "text",
       "placeholder": "e.g. 216",
       "maxLength": 8
+    },
+    {
+      "key": "MATTER_FILE_YEAR",
+      "label": "File Year",
+      "description": "Two-digit year for the file number (e.g. 26 for a 2026 case, 25 for a 2025 case). Entered separately rather than assumed from today's date, since older cases can still be worked on after the year changes.",
+      "type": "text",
+      "placeholder": "e.g. 26",
+      "maxLength": 2
     },
     {
       "key": "MATTER_SPECIFIC",

@@ -43,10 +43,11 @@ function buildContext(inputs) {
     }
     if (typeof val === 'string' && val.trim()) ctx[key] = val;
   }
-  if (ctx.MATTER_FILE_CODE && ctx.MATTER_TYPE) {
-    const yy = String(new Date().getFullYear()).slice(-2);
+  if (ctx.MATTER_FILE_CODE && ctx.MATTER_TYPE && ctx.MATTER_FILE_YEAR) {
     const prefix = ctx.MATTER_TYPE.short || ctx.MATTER_TYPE.label;
-    ctx.MATTER_FILE_CODE = `${prefix} ${ctx.MATTER_FILE_CODE}/${yy}`;
+    ctx.MATTER_FILE_CODE = `${prefix} ${ctx.MATTER_FILE_CODE}/${ctx.MATTER_FILE_YEAR}`;
+  } else {
+    delete ctx.MATTER_FILE_CODE;
   }
   return ctx;
 }

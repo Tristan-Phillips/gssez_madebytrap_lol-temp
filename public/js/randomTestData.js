@@ -42,6 +42,8 @@ function randomTextValue(key) {
       return pick(FIRMS);
     case 'MATTER_FILE_CODE':
       return String(1 + Math.floor(Math.random() * 300));
+    case 'MATTER_FILE_YEAR':
+      return pick(['24', '25', '26']);
     default:
       return `Test ${randomDigits(3)}`;
   }
